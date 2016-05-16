@@ -1,11 +1,18 @@
 #include <Sensirion.h>
 #include <DHT.h>
+#include <Adafruit_NeoPixel.h>
 
 // Sensor pins and types
+#define ledPin              5
 #define soilSensorDataPin   6
 #define soilSensorClockPin  7
 #define airSensorPin        4
 #define airSensorType       DHT11
+
+// Plant types
+#define babyLeafLettuce 0
+#define cabbage         1
+#define basil           2
 
 // Variables for the temperature & humidity sensor
 float soilHumidity;
@@ -14,15 +21,19 @@ float soilDewpoint;
 float airHumidity;
 float airTemp;
 
-// Create sensor instance
+// Create sensor and LED instance
 Sensirion soilSensor = Sensirion(soilSensorDataPin, soilSensorClockPin);
 DHT airSensor = DHT(airSensorPin, airSensorType);
+Adafruit_NeoPixel led = Adafruit_NeoPixel(60, ledPin, NEO_GRB + NEO_KHZ800);
 
 void setup() {
   Serial.begin(9600);
   Serial.println("Initializing...");
 
   airSensor.begin();
+
+  led.begin();
+  led.show();
 }
 
 void loop() {
@@ -34,6 +45,8 @@ void loop() {
       sendAndroidValues();
     }
   }
+
+  colorWipe(basil);
   
   // Wait 100 ms before next measurement
   delay(100);  
@@ -69,4 +82,33 @@ void sendAndroidValues() {
   Serial.print('~');
   Serial.println();
   delay(10);
+}
+
+void colorWipe(int plantType) {
+  switch (plantType) {
+    case 0:
+      for(int i=0; i<led.numPixels(); i++) {
+        led.setPixelColor(i, led.Color(72, 255, 0));
+        led.show();
+        delay(50);
+      }
+      break;
+    case 1:
+      for(int i=0; i<led.numPixels(); i++) {
+        led.setPixelColor(i, led.Color(255, 0, 0));
+        led.show();
+        delay(50);
+      }
+      break;
+    case 2:
+      for(int i = 0; i<led.numPixels(); i++) {
+        if ((i + 1) % 4 == 0)
+          led.setPixelColor(i, led.Color(0, 102, 255));
+        else
+          led.setPixelColor(i, led.Color(255, 0, 0));
+        led.show();
+        delay(50);
+      }
+      break;
+  }
 }
