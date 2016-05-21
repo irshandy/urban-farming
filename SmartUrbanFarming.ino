@@ -25,7 +25,9 @@ float airTemp;
 // Variables for LED
 long timePassed = 0;
 long timeStart = 0;
-byte lastLedStatus = 0;
+int onOff = 0;
+boolean pastLEDStatus = true; 
+int wavelength = 0;
 
 // Variables for Android
 String intData = "";
@@ -53,26 +55,25 @@ void loop() {
     if (c == 'm') {
       readSensor();
       sendAndroidValues();
-    }
-    else if ( c == 'i') {
+    } else if ( c >= '0' && c <= '9') {
+      intData += (char) c;
+    } else if ( c == 'i') {
       intData.toCharArray(intBuffer, intData.length() + 1);
       int wavelength = atoi(intBuffer);
       Serial.println(wavelength);
-      if (lastLedStatus == 0) {
-        if (wavelength == 660) {
-          setLEDColor(cabbage);
-        } else if (wavelength == 530) {
-          setLEDColor(babyLeafLettuce);
-        } else if (wavelength == 661) {
-          setLEDColor(basil);
-        }
-        lastLedStatus = 1;
+      if(wavelength == 660){
+        setLEDColor(babyLeafLettuce);
+      } else if(wavelength == 530){
+        setLEDColor(cabbage);
+      } else if(wavelength == 661){
+        setLEDColor(basil);
       }
+      onOff = 1;
+      
       intData = "";
     }
   }
-
-  setLEDColor(basil);
+  
   switchLED();
   
   // Wait 100 ms before next measurement
@@ -83,15 +84,17 @@ void switchLED() {
   timePassed += millis() - timeStart;
   if (timePassed >= 60 * 60 * 8) {
     timePassed = 0;
-    if (lastLedStatus == 0) {
+    if (pastLEDStatus == true) {
       led.setBrightness(0);
       led.show();
-      lastLedStatus = 1;
+      pastLEDStatus = false;
+      onOff = 0;
     }
     else {
       led.setBrightness(255);
       led.show();
-      lastLedStatus = 0;
+      pastLEDStatus = true;
+      onOff = 1;
     }
   }
 }
@@ -127,13 +130,14 @@ void sendAndroidValues() {
   Serial.print('#');
   Serial.print(soilTemp);
   Serial.print('#');
-  Serial.print(lastLedStatus);
+  Serial.print(onOff);
   Serial.print('~');
   Serial.println();
   delay(10);
 }
 
 void setLEDColor(int plantType) {
+  led.setBrightness(255);
   switch (plantType) {
     case 0:
       for(int i=0; i<led.numPixels(); i++) {
