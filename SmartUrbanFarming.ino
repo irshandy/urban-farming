@@ -73,9 +73,7 @@ void loop() {
       intData = "";
     }
   }
-  
-  switchLED();
-  
+
   // Wait 100 ms before next measurement
   delay(100);  
 }
